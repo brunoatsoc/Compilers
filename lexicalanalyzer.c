@@ -1,6 +1,6 @@
 /*
-    Aluno: Bruno Santos Costa
     Professora: Jacqueline Midlej do Espírito Santo
+    Aluno: Bruno Santos Costa
 */
 
 // Importa as bibliotecas que serão usadas no programa
