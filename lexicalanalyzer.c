@@ -15,7 +15,7 @@ enum STATE{
 
 // Declaração das funções
 int lexical_analyzer(char str[], int size);
-enum STATE acept_tk(enum STATE current, char character);
+enum STATE acept_tk(enum STATE current, char character, char* word);
 
 // Função principal
 int main(void){
@@ -71,33 +71,35 @@ int lexical_analyzer(char str[], int size){
     enum STATE current = Q0; //Sempre vai começar no estado Q0
     int i = 0; // Contador de posições do vetor
     char* word = (char*)malloc((size + 1) * sizeof(char)); // Cria uma variavel onde será guardado a palavra que acabou de ser lida
+	word[0] = '\0';
 
     // Laço para iterar nas posições do array
     while(i <= size){
-        current = acept_tk(current, str[i]); // Retorna o estado em que o eutomato está
-
-        char c[2] = {str[i], '\0'}; // Pega o caractere que acabou de ser lido
-        strcat(word, c); // Concatena o caractere que acabou de ser lido para formar a palavra final que pode ser aceita ou não
+        current = acept_tk(current, str[i], word); // Retorna o estado em que o eutomato está
 
         // Retorna uma menssagem de erro se cair em um estado que o eutomato não reconhece
         if(current == -1){
             printf("%s -> Rejected!!!\n", word);
-            return 0;
+			word[0] = '\0'; // Limpa a variavel que guarda a palavra que foi lida
+			current = Q0; // Retorna pqra o estado Q0 para poder ler outra palavra
         }
-
-        i++; // Incrementa aposição do vetor
 
         // Imprime o token que foi reconhecido ou retorna o erro
         if(current == TK_INT){
             printf("%s -> TK_INT\n", word); // Imprime a palavra e o token que foi aceito
             word[0] = '\0'; // Limpa a variavel que guarda a palavra que foi lida
             current = Q0; // Retorna pqra o estado Q0 para poder ler outra palavra
+			i = i - 1;
         }else if(current == TK_FLOAT){
             printf("%s -> TK_FLOAT\n", word); // Imprime a palavra e o token que foi aceito
             word[0] = '\0'; // Limpa a variavel que guarda a palavra que foi lida
             current = Q0; // Retorna ao estado Q0 para poder ler outra palavra
+			i = i - 1;
         }
+
+		i++; // Incrementa aposição do vetor
     }
+
     // Limpa a memória alocada para word
     free(word);
 
@@ -106,94 +108,115 @@ int lexical_analyzer(char str[], int size){
 
 // Função que simula o funcionamento do automato
 // A função retorna o estado atual do automato
-enum STATE acept_tk(enum STATE current, char character){
+enum STATE acept_tk(enum STATE current, char character, char* word){
     // Entra no estado atual e faz a ação que o estado em que ele está pode fazer
     // O switch case faz os desvios com base no automato real
     // Caso ele entre em algum estado mas o caractere que ele recebeu não leve ele a nenhum outro estado, será retornado uma menssagem de erro
     // Por exemplo no estado Q0, caso o caractere que ele receba não seja um espaço, '\n', um caractere entre '0' e '9' ou um ponto
     // Ele retorna -1 que significa um erro, pois ele não reconheceu o caractere
     // O mesmo acontece com todos os outros estados
+
+    char c[2] = {character, '\0'};
+
     switch(current){
         case Q0:
-            if(character == ' ' || character == '\n'){
+            if(character == ' ' || character == '\n' || character == '\t' || character == '\0'){
+                //strcat(word, c);
                 return Q0;
             }else if(character >= '0' && character <= '9'){
+                strcat(word, c);
                 return Q1;
             }else if(character == '.'){
+                strcat(word, c);
                 return Q14;
             }
             break;
         case Q1:
             if(character >= '0' && character <= '9'){
+                strcat(word, c);
                 return Q2;
             }else if(character == '.'){
+                strcat(word, c);
                 return Q5;
-            }else if(character == ' ' || character == '\n' || character == '\0'){
+            }else if(!(character >= '0' && character <= '9')){
                 return TK_INT;
             }
             break;
         case Q2:
             if(character >= '0' && character <= '9'){
+                strcat(word, c);
                 return Q3;
             }else if(character == '.'){
+                strcat(word, c);
                 return Q5;
-            }else if(character == ' ' || character == '\n' || character == '\0'){
+            }else if(!(character >= '0' && character <= '9')){
                 return TK_INT;
             }
             break;
         case Q3:
             if(character >= '0' && character <= '9'){
+                strcat(word, c);
                 return Q4;
             }else if(character == '.'){
+                strcat(word, c);
                 return Q5;
-            }else if(character == ' ' || character == '\n' || character == '\0'){
+            }else if(!(character >= '0' && character <= '9')){
                 return TK_INT;
             }
             break;
         case Q4:
             if(character >= '0' && character <= '9'){
+                strcat(word, c);
                 return Q4;
-            }else if(character == ' ' || character == '\n' || character == '\0'){
+            }else if(!(character >= '0' && character <= '9')){
                 return TK_INT;
             }
             break;
         case Q5:
             if(character >= '0' && character <= '9'){
+                strcat(word, c);
                 return Q6;
-            }else if(character == ' ' || character == '\n' || character == '\0'){
+            }else if(!(character >= '0' && character <= '9')){
                 return TK_FLOAT;
             }
             break;
         case Q6:
             if(character >= '0' && character <= '9'){
+                strcat(word, c);
                 return Q6;
             }else if(character == 'e'){
+                strcat(word, c);
                 return Q7;
-            }else if(character == ' ' || character == '\n' || character == '\0'){
+            }else if(!(character >= '0' && character <= '9')){
                 return TK_FLOAT;
             }
             break;
         case Q7:
             if(character == '-'){
+                strcat(word, c);
                 return Q10;
             }else if(character >= '0' && character <= '9'){
+                strcat(word, c);
                 return Q9;
             }
             break;
         case Q10:
             if(character >= '0' && character <= '9'){
+                strcat(word, c);
                 return Q9;
             }
             break;
         case Q14:
             if(character >= '0' && character <= '9'){
+                strcat(word, c);
                 return Q6;
             }
             break;
         case Q9:
             if(character >= '0' && character <= '9'){
+                strcat(word, c);
                 return Q9;
-            }else if(character == ' ' || character == '\n' || character == '\0'){
+            }else if(!(character >= '0' && character <= '9')){
                 return TK_FLOAT;
             }
             break;
@@ -201,6 +224,9 @@ enum STATE acept_tk(enum STATE current, char character){
             // Case ele receba algum estado que não existe nessa versão do eutomato também será retornado um erro
             return -1;
     }
+
+    strcat(word, c);
+
     // Retorno do erro
     return -1;
 }
