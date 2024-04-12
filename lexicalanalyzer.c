@@ -71,7 +71,7 @@ int lexical_analyzer(char str[], int size){
     enum STATE current = Q0; //Sempre vai começar no estado Q0
     int i = 0; // Contador de posições do vetor
     char* word = (char*)malloc((size + 1) * sizeof(char)); // Cria uma variavel onde será guardado a palavra que acabou de ser lida
-	word[0] = '\0';
+	word[0] = '\0'; // String "limpa"
 
     // Laço para iterar nas posições do array
     while(i <= size){
@@ -79,8 +79,8 @@ int lexical_analyzer(char str[], int size){
 
         // Retorna uma menssagem de erro se cair em um estado que o eutomato não reconhece
         if(current == -1){
-            printf("%s -> Rejected!!!\n", word);
-			word[0] = '\0'; // Limpa a variavel que guarda a palavra que foi lida
+            printf("%s -> Rejected!!!\n", word); // Imprime a palavra que teve um erro
+			word[0] = '\0'; // Limpa a variavel que guarda a palavra que teve o erro
 			current = Q0; // Retorna pqra o estado Q0 para poder ler outra palavra
         }
 
@@ -89,12 +89,12 @@ int lexical_analyzer(char str[], int size){
             printf("%s -> TK_INT\n", word); // Imprime a palavra e o token que foi aceito
             word[0] = '\0'; // Limpa a variavel que guarda a palavra que foi lida
             current = Q0; // Retorna pqra o estado Q0 para poder ler outra palavra
-			i = i - 1;
+			i = i - 1; // Volta uma posição para que quando a variavel i for incrementada o array fique na mesma posição que está agora
         }else if(current == TK_FLOAT){
             printf("%s -> TK_FLOAT\n", word); // Imprime a palavra e o token que foi aceito
             word[0] = '\0'; // Limpa a variavel que guarda a palavra que foi lida
             current = Q0; // Retorna ao estado Q0 para poder ler outra palavra
-			i = i - 1;
+			i = i - 1; // Volta uma posição para que quando a variavel i for incrementada o array fique na mesma posição que está agora
         }
 
 		i++; // Incrementa aposição do vetor
@@ -116,12 +116,13 @@ enum STATE acept_tk(enum STATE current, char character, char* word){
     // Ele retorna -1 que significa um erro, pois ele não reconheceu o caractere
     // O mesmo acontece com todos os outros estados
 
+    // Variavel que vai formar a palavra que está sendo lida, esta variavel vai se concatenada com word
+    // strcat vai concatenar c com word, no final uma palavra aceita ou recusada vai ser formada
     char c[2] = {character, '\0'};
 
     switch(current){
         case Q0:
             if(character == ' ' || character == '\n' || character == '\t' || character == '\0'){
-                //strcat(word, c);
                 return Q0;
             }else if(character >= '0' && character <= '9'){
                 strcat(word, c);
