@@ -1,2 +1,8 @@
-15 5 0 2314535452542    
-.123 0.123 23.23 134.5 123. 123.212314 123.13141e10 1.0e-12 .9e-12          
+# EX-01-correto
+
+rotina:
+    imprima("Digite um nro")
+    leia(nUmErO)
+    nUm <== nUm <> 123
+    imprima(123.0e10)
+fim_rotina
