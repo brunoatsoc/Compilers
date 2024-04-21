@@ -10,13 +10,20 @@
 
 // Enumeração dos estados do automato
 enum STATE{
-    Q0, Q1, Q2, Q3, Q4, TK_INT, Q14, Q5, Q6, Q7, Q10, Q9, TK_FLOAT, Q32, Q33, Q34, TK_ID, Q71, TK_IDENTIFIER, Q16, Q17, Q18, Q19, Q20, Q21, Q22, Q23, Q24, Q25, Q26, Q27, TK_DATA, Q28, Q29, Q30, TK_END, Q50, Q51, COMMENTLINE, Q12, Q13, Q15, TK_CADEIA, Q37, Q44, Q45, Q46, Q47, Q48, Q49, COMMENTMULTLINES, Q40, Q43, TK_GREATERTHAN, TK_GREATEREQUAL, TK_LESSTHAN, Q39, TK_LESSEQUAL, Q42, TK_ASSIGNMENT, Q38, TK_NOTEQUAL, Q41, Q67, TK_EQUAL, Q54, TK_OPENPAR, Q53, TK_TOWDOTS, Q55, TK_CLOSEPAR, Q70, TK_OR, Q69, TK_AND, Q36, TK_ADD, Q56, TK_SUB, Q57, TK_MULT, Q58, TK_DIV, Q59, TK_MOD, Q60, TK_NOT, INITIAL_ERROR
+    Q0, Q1, Q2, Q3, Q4, TK_INT, Q14, Q5, Q6, Q7, Q10, Q9, TK_FLOAT, Q32, Q33, Q34, TK_ID, Q71, TK_IDENTIFIER, Q16, Q17, Q18, Q19, Q20, Q21, Q22, Q23, Q24, Q25, Q26, Q27, TK_DATA, Q28, Q29, Q30, TK_END, Q50, Q51, COMMENTLINE, Q12, Q13, Q15, TK_CADEIA, Q37, Q44, Q45, Q46, Q47, Q48, Q49, COMMENTMULTLINES, Q40, Q43, TK_GREATERTHAN, TK_GREATEREQUAL, TK_LESSTHAN, Q39, TK_LESSEQUAL, Q42, TK_ASSIGNMENT, Q38, TK_NOTEQUAL, Q41, Q67, TK_EQUAL, Q54, TK_OPENPAR, Q53, TK_TOWDOTS, Q55, TK_CLOSEPAR, Q70, TK_OR, Q69, TK_AND, Q36, TK_ADD, Q56, TK_SUB, Q57, TK_MULT, Q58, TK_DIV, Q59, TK_MOD, Q60, TK_NOT, INITIAL_ERROR, QUOTATION_ERROR, KEYWORD_ERROR, ID_ERROR
 };
 
 // Declaração das funções
-int lexical_analyzer(char str[], int size);
+int lexical_analyzer(char str[], int size, char*** TK, int** row, int** column, char*** lexem, int* count, int* qtd);
 enum STATE acept_tk(enum STATE current, char character, char* word);
 int haveKeyWord(char* word);
+int allocMemory(char*** TK, int** row, int** column, char*** lexem, int count);
+void asignValues(int j, int* k, int* count, char** TK, int row[], int column[], char** lexem, char* word, enum STATE* current, int* i, char* tk_x);
+void printTable(char** TK, int* row, int* column, char** lexem, int count, int qtd[]);
+void initializeWithZero(int* var, int size);
+void errorMessage(int* row, int* column, char* program, enum STATE* error);
+int allocMemoryError(int** r, int** c, enum STATE** s, int count);
+void asignValuesError(char* word, int** errorRow, int** errorColumn, enum STATE** errorState, enum STATE* current, int* c, int* i, int j, int k, enum STATE errorT);
 
 // Função principal
 int main(void){
@@ -51,7 +58,18 @@ int main(void){
     fclose(file);
 
     // Chama a funão que fara a leitura de cada carctere do array
-    lexical_analyzer(contentfile, size);
+    char** TK = NULL;
+    int* row = NULL;
+    int* column = NULL;
+    char** lexem = NULL;
+    int count = 0;
+    int qtd[27];
+    
+    initializeWithZero(qtd, 27);
+
+    lexical_analyzer(contentfile, size, &TK, &row, &column, &lexem, &count, qtd);
+
+    printTable(TK, row, column, lexem, count, qtd);
 
     // Limpa a memória alocada para contentfile
     free(contentfile);
@@ -61,7 +79,7 @@ int main(void){
 }// Fim main
 
 // Função que vai ler cada caractere do vetor str onde tem a string do arquivo
-int lexical_analyzer(char str[], int size){
+int lexical_analyzer(char str[], int size, char*** TK, int** row, int** column, char*** lexem, int* count, int* qtd){
     // Caso a variavel que guarda o tamanho do arquivo seja zero
     //O progrma retorna uma menssagem de erro e retorna para a função principal
     if(size == 0){
@@ -74,15 +92,61 @@ int lexical_analyzer(char str[], int size){
     char* word = (char*)malloc((size + 1) * sizeof(char)); // Cria uma variavel onde será guardado a palavra que acabou de ser lida
 	word[0] = '\0'; // String "limpa"
 
+    int j = 0, k = 0; // j é uma linha e k uma coluna
+
+    int* errorRow = NULL;
+    int* errorColumn = NULL;
+    enum STATE* errorState = NULL;
+    int c = 0;
+
     // Laço para iterar nas posições do array
     while(i <= size){
         current = acept_tk(current, str[i], word); // Retorna o estado em que o eutomato está
 
         if(current == INITIAL_ERROR){
-            printf("%s -> Rejected!!!\n", word); // Imprime a palavra que teve um erro
+            /*printf("%s -> Rejected1!!!\n", word); // Imprime a palavra que teve um erro
 			word[0] = '\0'; // Limpa a variavel que guarda a palavra que teve o erro
 			current = Q0; // Retorna pqra o estado Q0 para poder ler outra palavra
-            //i = i - 1;
+            allocMemoryError(&errorRow, &errorColumn, &errorState, c);
+            errorRow[c] = j;
+            errorColumn[c] = k;
+            errorState[c] = INITIAL_ERROR;
+            i = i - 1;
+            c++;*/
+            asignValuesError(word, &errorRow, &errorColumn, &errorState, &current, &c, &i, j, k, INITIAL_ERROR);
+        }else if(current == QUOTATION_ERROR){
+            /*printf("%s -> Rejected!!!2\n", word); // Imprime a palavra que teve um erro
+			word[0] = '\0'; // Limpa a variavel que guarda a palavra que teve o erro
+			current = Q0; // Retorna pqra o estado Q0 para poder ler outra palavra
+            allocMemoryError(&errorRow, &errorColumn, &errorState, c);
+            errorRow[c] = j;
+            errorColumn[c] = k;
+            errorState[c] = QUOTATION_ERROR;
+            i = i - 1;
+            c++;*/
+            asignValuesError(word, &errorRow, &errorColumn, &errorState, &current, &c, &i, j, k, QUOTATION_ERROR);
+        }else if(current == ID_ERROR){
+            /*printf("%s -> Rejected!!!3\n", word); // Imprime a palavra que teve um erro
+			word[0] = '\0'; // Limpa a variavel que guarda a palavra que teve o erro
+			current = Q0; // Retorna pqra o estado Q0 para poder ler outra palavra
+            allocMemoryError(&errorRow, &errorColumn, &errorState, c);
+            errorRow[c] = j;
+            errorColumn[c] = k;
+            errorState[c] = ID_ERROR;
+            i = i - 1;
+            c++;*/
+            asignValuesError(word, &errorRow, &errorColumn, &errorState, &current, &c, &i, j, k, ID_ERROR);
+        }else if(current == KEYWORD_ERROR){
+            /*printf("%s -> Rejected!!!4\n", word); // Imprime a palavra que teve um erro
+			word[0] = '\0'; // Limpa a variavel que guarda a palavra que teve o erro
+			current = Q0; // Retorna pqra o estado Q0 para poder ler outra palavra
+            allocMemoryError(&errorRow, &errorColumn, &errorState, c);
+            errorRow[c] = j;
+            errorColumn[c] = k;
+            errorState[c] = KEYWORD_ERROR;
+            i = i - 1;
+            c++;*/
+            asignValuesError(word, &errorRow, &errorColumn, &errorState, &current, &c, &i, j, k, KEYWORD_ERROR);
         }
 
         // Retorna uma menssagem de erro se cair em um estado que o eutomato não reconhece
@@ -91,148 +155,136 @@ int lexical_analyzer(char str[], int size){
 			word[0] = '\0'; // Limpa a variavel que guarda a palavra que teve o erro
 			current = Q0; // Retorna pqra o estado Q0 para poder ler outra palavra
             i = i - 1;
+            allocMemoryError(&errorRow, &errorColumn, &errorState, c);
+            errorRow[c] = j;
+            errorColumn[c] = k;
+            errorState[c] = -1;
+            c++;
+            k = k - 1;
         }
 
         // Imprime o token que foi reconhecido ou retorna o erro
         if(current == TK_INT){
-            printf("%s -> TK_INT\n", word); // Imprime a palavra e o token que foi aceito
-            word[0] = '\0'; // Limpa a variavel que guarda a palavra que foi lida
-            current = Q0; // Retorna pqra o estado Q0 para poder ler outra palavra
-			i = i - 1; // Volta uma posição para que quando a variavel i for incrementada o array fique na mesma posição que está agora
+            allocMemory(TK, row, column, lexem, *count);
+            asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_INT");
+            qtd[0] += 1;
         }else if(current == TK_FLOAT){
-            printf("%s -> TK_FLOAT\n", word); // Imprime a palavra e o token que foi aceito
-            word[0] = '\0'; // Limpa a variavel que guarda a palavra que foi lida
-            current = Q0; // Retorna ao estado Q0 para poder ler outra palavra
-			i = i - 1; // Volta uma posição para que quando a variavel i for incrementada o array fique na mesma posição que está agora
+            allocMemory(TK, row, column, lexem, *count);
+            asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_FLOAT");
+            qtd[1] += 1;
         }else if(current == TK_ID){
-            printf("%s -> TK_ID\n", word); // Imprime a palavra e o token que foi aceito
-            word[0] = '\0'; // Limpa a variavel que guarda a palavra que foi lida
-            current = Q0; // Retorna ao estado Q0 para poder ler outra palavra
-			i = i - 1; // Volta uma posição para que quando a variavel i for incrementada o array fique na mesma posição que está agora
+            allocMemory(TK, row, column, lexem, *count);
+            asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_ID");
+            qtd[2] += 1;
         }else if(current == TK_IDENTIFIER){
-            printf("%s -> TK_IDENTIFIER\n", word); // Imprime a palavra e o token que foi aceito
-            word[0] = '\0'; // Limpa a variavel que guarda a palavra que foi lida
-            current = Q0; // Retorna ao estado Q0 para poder ler outra palavra
-			i = i - 1; // Volta uma posição para que quando a variavel i for incrementada o array fique na mesma posição que está agora
+            allocMemory(TK, row, column, lexem, *count);
+            asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_IDENTIFIER");
+            qtd[3] += 1;
         }else if(current == TK_DATA){
-            printf("%s -> TK_DATA\n", word); // Imprime a palavra e o token que foi aceito
-            word[0] = '\0'; // Limpa a variavel que guarda a palavra que foi lida
-            current = Q0; // Retorna ao estado Q0 para poder ler outra palavra
-			i = i - 1; // Volta uma posição para que quando a variavel i for incrementada o array fique na mesma posição que está agora
+            allocMemory(TK, row, column, lexem, *count);
+            asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_DATA");
+            qtd[4] += 1;
         }else if(current == TK_END){
-            printf("%s -> TK_END\n", word); // Imprime a palavra e o token que foi aceito
-            word[0] = '\0'; // Limpa a variavel que guarda a palavra que foi lida
-            current = Q0; // Retorna ao estado Q0 para poder ler outra palavra
-			i = i - 1; // Volta uma posição para que quando a variavel i for incrementada o array fique na mesma posição que está agora
+            allocMemory(TK, row, column, lexem, *count);
+            asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_END");
+            qtd[5] += 1;
         }else if(current == COMMENTLINE){
-            printf("%s -> COMMENTLINE\n", word); // Imprime a palavra e o token que foi aceito
-            word[0] = '\0'; // Limpa a variavel que guarda a palavra que foi lida
-            current = Q0; // Retorna ao estado Q0 para poder ler outra palavra
-			i = i - 1; // Volta uma posição para que quando a variavel i for incrementada o array fique na mesma posição que está agora
+            allocMemory(TK, row, column, lexem, *count);
+            asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "COMMENTLINE");
+            qtd[6] += 1;
         }else if(current == TK_CADEIA){
-            printf("%s -> TK_CADEIA\n", word); // Imprime a palavra e o token que foi aceito
-            word[0] = '\0'; // Limpa a variavel que guarda a palavra que foi lida
-            current = Q0; // Retorna ao estado Q0 para poder ler outra palavra
-			i = i - 1; // Volta uma posição para que quando a variavel i for incrementada o array fique na mesma posição que está agora
+            allocMemory(TK, row, column, lexem, *count);
+            asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_CADEIA");
+            qtd[7] += 1;
         }else if(current == COMMENTMULTLINES){
-            printf("%s -> COMMENTMUTLINES\n", word); // Imprime a palavra e o token que foi aceito
-            word[0] = '\0'; // Limpa a variavel que guarda a palavra que foi lida
-            current = Q0; // Retorna ao estado Q0 para poder ler outra palavra
-			i = i - 1; // Volta uma posição para que quando a variavel i for incrementada o array fique na mesma posição que está agora
+            allocMemory(TK, row, column, lexem, *count);
+            asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "COMMENTMULTLINES");
+            qtd[8] += 1;
         }else if(current == TK_GREATERTHAN){
-            printf("%s -> TK_GREATERTHAN\n", word); // Imprime a palavra e o token que foi aceito
-            word[0] = '\0'; // Limpa a variavel que guarda a palavra que foi lida
-            current = Q0; // Retorna ao estado Q0 para poder ler outra palavra
-			i = i - 1; // Volta uma posição para que quando a variavel i for incrementada o array fique na mesma posição que está agora
+            allocMemory(TK, row, column, lexem, *count);
+            asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_GREATERTHAN");
+            qtd[9] += 1;
         }else if(current == TK_GREATEREQUAL){
-            printf("%s -> TK_GREATEREQUAL\n", word); // Imprime a palavra e o token que foi aceito
-            word[0] = '\0'; // Limpa a variavel que guarda a palavra que foi lida
-            current = Q0; // Retorna ao estado Q0 para poder ler outra palavra
-			i = i - 1; // Volta uma posição para que quando a variavel i for incrementada o array fique na mesma posição que está agora
+            allocMemory(TK, row, column, lexem, *count);
+            asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_GREATEREQUAL");
+            qtd[10] += 1;
         }else if(current == TK_LESSTHAN){
-            printf("%s -> TK_LESSTHAN\n", word); // Imprime a palavra e o token que foi aceito
-            word[0] = '\0'; // Limpa a variavel que guarda a palavra que foi lida
-            current = Q0; // Retorna ao estado Q0 para poder ler outra palavra
-			i = i - 1; // Volta uma posição para que quando a variavel i for incrementada o array fique na mesma posição que está agora
+            allocMemory(TK, row, column, lexem, *count);
+            asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_LESSTHAN");
+            qtd[11] += 1;
         }else if(current == TK_LESSEQUAL){
-            printf("%s -> TK_LESSEQUAL\n", word); // Imprime a palavra e o token que foi aceito
-            word[0] = '\0'; // Limpa a variavel que guarda a palavra que foi lida
-            current = Q0; // Retorna ao estado Q0 para poder ler outra palavra
-			i = i - 1; // Volta uma posição para que quando a variavel i for incrementada o array fique na mesma posição que está agora
+            allocMemory(TK, row, column, lexem, *count);
+            asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_LESSEQUAL");
+            qtd[12] += 1;
         }else if(current == TK_ASSIGNMENT){
-            printf("%s -> TK_ASSIGNMENT\n", word); // Imprime a palavra e o token que foi aceito
-            word[0] = '\0'; // Limpa a variavel que guarda a palavra que foi lida
-            current = Q0; // Retorna ao estado Q0 para poder ler outra palavra
-			i = i - 1; // Volta uma posição para que quando a variavel i for incrementada o array fique na mesma posição que está agora
+            allocMemory(TK, row, column, lexem, *count);
+            asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_ASSIGNMENT");
+            qtd[13] += 1;
         }else if(current == TK_NOTEQUAL){
-            printf("%s -> TK_NOTEQUAL\n", word); // Imprime a palavra e o token que foi aceito
-            word[0] = '\0'; // Limpa a variavel que guarda a palavra que foi lida
-            current = Q0; // Retorna ao estado Q0 para poder ler outra palavra
-			i = i - 1; // Volta uma posição para que quando a variavel i for incrementada o array fique na mesma posição que está agora
+            allocMemory(TK, row, column, lexem, *count);
+            asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_NOTEQUAL");
+            qtd[14] += 1;
         }else if(current == TK_EQUAL){
-            printf("%s -> TK_EQUAL\n", word); // Imprime a palavra e o token que foi aceito
-            word[0] = '\0'; // Limpa a variavel que guarda a palavra que foi lida
-            current = Q0; // Retorna ao estado Q0 para poder ler outra palavra
-			i = i - 1; // Volta uma posição para que quando a variavel i for incrementada o array fique na mesma posição que está agora
+            allocMemory(TK, row, column, lexem, *count);
+            asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_EQUAL");
+            qtd[15] += 1;
         }else if(current == TK_OPENPAR){
-            printf("%s -> TK_OPENPAR\n", word); // Imprime a palavra e o token que foi aceito
-            word[0] = '\0'; // Limpa a variavel que guarda a palavra que foi lida
-            current = Q0; // Retorna ao estado Q0 para poder ler outra palavra
-			i = i - 1; // Volta uma posição para que quando a variavel i for incrementada o array fique na mesma posição que está agora
+            allocMemory(TK, row, column, lexem, *count);
+            asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_OPENPAR");
+            qtd[16] += 1;
         }else if(current == TK_CLOSEPAR){
-            printf("%s -> TK_CLOSEPAR\n", word); // Imprime a palavra e o token que foi aceito
-            word[0] = '\0'; // Limpa a variavel que guarda a palavra que foi lida
-            current = Q0; // Retorna ao estado Q0 para poder ler outra palavra
-			i = i - 1; // Volta uma posição para que quando a variavel i for incrementada o array fique na mesma posição que está agora
+            allocMemory(TK, row, column, lexem, *count);
+            asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_CLOSEPAR");
+            qtd[17] += 1;
         }else if(current == TK_TOWDOTS){
-            printf("%s -> TK_TOWDOTS\n", word); // Imprime a palavra e o token que foi aceito
-            word[0] = '\0'; // Limpa a variavel que guarda a palavra que foi lida
-            current = Q0; // Retorna ao estado Q0 para poder ler outra palavra
-			i = i - 1; // Volta uma posição para que quando a variavel i for incrementada o array fique na mesma posição que está agora
+            allocMemory(TK, row, column, lexem, *count);
+            asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_TOWDOTS");
+            qtd[18] += 1;
         }else if(current == TK_OR){
-            printf("%s -> TK_OR\n", word); // Imprime a palavra e o token que foi aceito
-            word[0] = '\0'; // Limpa a variavel que guarda a palavra que foi lida
-            current = Q0; // Retorna ao estado Q0 para poder ler outra palavra
-			i = i - 1; // Volta uma posição para que quando a variavel i for incrementada o array fique na mesma posição que está agora
+            allocMemory(TK, row, column, lexem, *count);
+            asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_OR");
+            qtd[19] += 1;
         }else if(current == TK_AND){
-            printf("%s -> TK_AND\n", word); // Imprime a palavra e o token que foi aceito
-            word[0] = '\0'; // Limpa a variavel que guarda a palavra que foi lida
-            current = Q0; // Retorna ao estado Q0 para poder ler outra palavra
-			i = i - 1; // Volta uma posição para que quando a variavel i for incrementada o array fique na mesma posição que está agora
+            allocMemory(TK, row, column, lexem, *count);
+            asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_AND");
+            qtd[20] += 1;
         }else if(current == TK_ADD){
-            printf("%s -> TK_ADD\n", word); // Imprime a palavra e o token que foi aceito
-            word[0] = '\0'; // Limpa a variavel que guarda a palavra que foi lida
-            current = Q0; // Retorna ao estado Q0 para poder ler outra palavra
-			i = i - 1; // Volta uma posição para que quando a variavel i for incrementada o array fique na mesma posição que está agora
+            allocMemory(TK, row, column, lexem, *count);
+            asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_ADD");
+            qtd[21] += 1;
         }else if(current == TK_SUB){
-            printf("%s -> TK_SUB\n", word); // Imprime a palavra e o token que foi aceito
-            word[0] = '\0'; // Limpa a variavel que guarda a palavra que foi lida
-            current = Q0; // Retorna ao estado Q0 para poder ler outra palavra
-			i = i - 1; // Volta uma posição para que quando a variavel i for incrementada o array fique na mesma posição que está agora
+            allocMemory(TK, row, column, lexem, *count);
+            asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_SUB");
+            qtd[22] += 1;
         }else if(current == TK_MULT){
-            printf("%s -> TK_MULT\n", word); // Imprime a palavra e o token que foi aceito
-            word[0] = '\0'; // Limpa a variavel que guarda a palavra que foi lida
-            current = Q0; // Retorna ao estado Q0 para poder ler outra palavra
-			i = i - 1; // Volta uma posição para que quando a variavel i for incrementada o array fique na mesma posição que está agora
+            allocMemory(TK, row, column, lexem, *count);
+            asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_MULT");
+            qtd[23] += 1;
         }else if(current == TK_DIV){
-            printf("%s -> TK_DIV\n", word); // Imprime a palavra e o token que foi aceito
-            word[0] = '\0'; // Limpa a variavel que guarda a palavra que foi lida
-            current = Q0; // Retorna ao estado Q0 para poder ler outra palavra
-			i = i - 1; // Volta uma posição para que quando a variavel i for incrementada o array fique na mesma posição que está agora
+            allocMemory(TK, row, column, lexem, *count);
+            asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_DIV");
+            qtd[24] += 1;
         }else if(current == TK_MOD){
-            printf("%s -> TK_MOD\n", word); // Imprime a palavra e o token que foi aceito
-            word[0] = '\0'; // Limpa a variavel que guarda a palavra que foi lida
-            current = Q0; // Retorna ao estado Q0 para poder ler outra palavra
-			i = i - 1; // Volta uma posição para que quando a variavel i for incrementada o array fique na mesma posição que está agora
+            allocMemory(TK, row, column, lexem, *count);
+            asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_MOD");
+            qtd[25] += 1;
         }else if(current == TK_NOT){
-            printf("%s -> TK_NOT\n", word); // Imprime a palavra e o token que foi aceito
-            word[0] = '\0'; // Limpa a variavel que guarda a palavra que foi lida
-            current = Q0; // Retorna ao estado Q0 para poder ler outra palavra
-			i = i - 1; // Volta uma posição para que quando a variavel i for incrementada o array fique na mesma posição que está agora
+            allocMemory(TK, row, column, lexem, *count);
+            asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_NOT");
+            qtd[26] += 1;
+        }
+
+        k++;
+
+        if(str[i] == '\n'){
+            k = 0;
+            j++;
         }
 
 		i++; // Incrementa aposição do vetor
     }
+
+    errorMessage(errorRow, errorColumn, str, errorState);
 
     // Limpa a memória alocada para word
     free(word);
@@ -438,7 +490,7 @@ enum STATE acept_tk(enum STATE current, char character, char* word){
             }else if(!(character >= 'a' && character >= 'z')){
                 return TK_ID;
             }
-            break;
+            return ID_ERROR;
         case Q34:
             if(character >= 'A' && character <= 'Z'){
                 strcat(word, c);
@@ -446,7 +498,7 @@ enum STATE acept_tk(enum STATE current, char character, char* word){
             }else if(!(character >= 'A' && character >= 'Z')){
                 return TK_ID;
             }
-            break;
+            return ID_ERROR;
         case Q71:
             if((character >= 'a' && character <= 'z') || character == '_'){
                 strcat(word, c);
@@ -455,6 +507,7 @@ enum STATE acept_tk(enum STATE current, char character, char* word){
                 if(haveKeyWord(word) == 1){
                     return TK_IDENTIFIER;
                 }
+                return KEYWORD_ERROR;
             }
             break;
         case Q16:
@@ -564,7 +617,8 @@ enum STATE acept_tk(enum STATE current, char character, char* word){
                 strcat(word, c);
                 return Q15;
             }
-            break;
+
+            return QUOTATION_ERROR;
         case Q13:
             if((character >= ' ' && character <= '~') && character != '"'){
                 strcat(word, c);
@@ -573,7 +627,7 @@ enum STATE acept_tk(enum STATE current, char character, char* word){
                 strcat(word, c);
                 return Q15;
             }
-            break;
+            return QUOTATION_ERROR;
         case Q15:
             return TK_CADEIA;
         case Q37:
@@ -697,4 +751,128 @@ int haveKeyWord(char* word){
         }
     }
     return 0; // Retorna zero se a palavra não faz parte da linguagem
+}
+
+int allocMemory(char*** TK, int** row, int** column, char*** lexem, int count){
+    *TK = (char**)realloc(*TK, (count + 1) * sizeof(char*));
+    *row = (int*)realloc(*row, (count + 1) * sizeof(int));
+    *column = (int*)realloc(*column, (count + 1) * sizeof(int));
+    *lexem = (char**)realloc(*lexem, (count + 1) * sizeof(char*));
+
+    if(TK == NULL || row == NULL || column == NULL || lexem == NULL){
+        printf("Error allocating memory!!!\n");
+
+        return -1;
+    }
+}
+
+int allocMemoryError(int** r, int** c, enum STATE** s, int count){
+    *r = (int*)realloc(*r, (count + 1) * sizeof(int));
+    *c = (int*)realloc(*c, (count + 1) * sizeof(int));
+    *s = (enum STATE*)realloc(*s, (count + 1) * sizeof(enum STATE));
+
+    if(r == NULL || c == NULL || s == NULL){
+        printf("Error allocating memory!!!\n");
+
+        return -1;
+    }
+}
+
+void asignValues(int j, int* k, int* count, char** TK, int* row, int* column, char** lexem, char* word, enum STATE* current, int* i, char* tk_x){
+    printf("%s -> %s\n", word, tk_x);
+    row[*(count)] = j;
+    column[*(count)] = (*k) - 1;
+    TK[*(count)] = tk_x;
+    lexem[*(count)] = strdup(word);
+    word[0] = '\0';
+    (*current) = Q0;
+    (*i) = (*i) - 1;
+    printf("count = %d, linha = %d, coluna = %d, TK = %s, lexem = %s\n", *(count), row[*(count)], column[*(count)], TK[*(count)], lexem[*(count)]);
+    (*count)++;
+    *(k) = (*k) - 1;
+}
+
+void asignValuesError(char* word, int** errorRow, int** errorColumn, enum STATE** errorState, enum STATE* current, int* c, int* i, int j, int k, enum STATE errorT){
+    printf("%s -> Rejected!!!\n", word); // Imprime a palavra que teve um erro
+    word[0] = '\0'; // Limpa a variavel que guarda a palavra que teve o erro
+    current = Q0; // Retorna pqra o estado Q0 para poder ler outra palavra
+    allocMemoryError(errorRow, errorColumn, errorState, *c);
+    (*errorRow)[*c] = j;
+    (*errorColumn)[*c] = k;
+    (*errorState)[*c] = errorT;
+    (*i) = (*i) - 1;
+    (*c)++;
+}
+
+void printTable(char** TK, int* row, int* column, char** lexem, int count, int qtd[]){
+    int i;
+    int size = 27;
+
+    char* TOKEN[] = {"TK_INT", "TK_FLOAT", "TK_ID", "TK_IDENTIFIER", "TK_DATA", "TK_END", "COMMENTLINE", "TK_CADEIA", "COMMENTMULTLINES", "TK_GREATERTHAN", "TK_GREATEREQUAL", "TK_LESSTHAN", "TK_LESSEQUAL", "TK_ASSIGNMENT", "TK_NOTEQUAL", "TK_EQUAL", "TK_OPENPAR", "TK_CLOSEPAR", "TK_TOWDOTS", "TK_OR", "TK_AND", "TK_ADD", "TK_SUB", "TK_MULT", "TK_DIV", "TK_MOD", "TK_NOT"};
+
+    printf("+-----+-----+----------------+--------------------+\n");
+    printf("| LIN | COL | TOKEN          | LEXEMA             |\n");
+    printf("+-----+-----+----------------+--------------------+\n");
+
+    for(i = 0; i < count; i++){
+        printf("|%3d  |%3d  |%-15s |%-19s |\n", row[i], column[i], TK[i], lexem[i]);
+        printf("+-----+-----+----------------+--------------------+\n");
+    }
+
+    printf("\n\n");
+
+    printf("+----------------+------+\n");
+    printf("| TOKEN          | USOS |\n");
+    printf("+----------------+------+\n");
+
+    for(i = 0; i < 27; i++){
+        if(qtd[i] != 0){
+            printf("|%-15s | %3d  |\n", TOKEN[i], qtd[i]);
+            printf("+----------------+------+\n");
+        }
+    }
+}
+
+void initializeWithZero(int* var, int size){
+    int i;
+
+    for(i = 0; i < size; i++){
+        var[i] = 0;
+    }
+}
+
+void errorMessage(int* row, int* column, char* program, enum STATE* error){
+    int i = 0;
+    int j = 0, k = 0, l = 0;
+
+    while(program[i] != '\0'){
+        if(program[i] == '\n'){
+            k = 0;
+            j++;
+        }
+
+        printf("%c", program[i]);
+
+        if((row[l] + 1) == j){
+            printf("\n");
+            int count;
+            for(count = 0; count < column[l]; count++){
+                printf("-");
+            }
+            printf("^\n");
+
+            if(error[l] == INITIAL_ERROR || error[l] == -1){
+                printf("Erro na Linha %d Coluna %d: Não reconhece TOKEN!!!\n", row[l], column[l]);
+            }else if(error[l] == QUOTATION_ERROR){
+                printf("Erro na Linha %d Coluna %d: Cadeia sem fechamento!!!\n", row[l], column[l]);
+            }else if(error[l] == ID_ERROR){
+                printf("Erro na Linha %d Coluna %d: Identificador não valido!!!\n", row[l], column[l]);
+            }else if(error[l] == KEYWORD_ERROR){
+                printf("Erro na Linha %d Coluna %d: Palavra Reservada não encontrada!!!\n", row[l], column[l]);
+            }
+            l++;
+        }
+        i++;
+    }
+    printf("\n\n");
 }

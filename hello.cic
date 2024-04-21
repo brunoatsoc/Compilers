@@ -1,8 +1,7 @@
-# EX-01-correto
-
-rotina:
-    imprima("Digite um nro")
+rotina
+    imprima("Digite um n
+    mero")
     leia(nUmErO)
-    nUm <== nUm <> 123
+    nUm <== nUm <123>
     imprima(123.0e10)
 fim_rotina
