@@ -151,7 +151,7 @@ int lexical_analyzer(char str[], int size, char*** TK, int** row, int** column, 
 
         // Retorna uma menssagem de erro se cair em um estado que o eutomato não reconhece
         if(current == -1){
-            printf("%s -> Rejected!!!\n", word); // Imprime a palavra que teve um erro
+            printf("%s -> Rejected!!!5\n", word); // Imprime a palavra que teve um erro
 			word[0] = '\0'; // Limpa a variavel que guarda a palavra que teve o erro
 			current = Q0; // Retorna pqra o estado Q0 para poder ler outra palavra
             i = i - 1;
