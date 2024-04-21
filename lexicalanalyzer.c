@@ -284,7 +284,9 @@ int lexical_analyzer(char str[], int size, char*** TK, int** row, int** column, 
 		i++; // Incrementa aposição do vetor
     }
 
-    errorMessage(errorRow, errorColumn, str, errorState);
+    if(c > 0){
+        errorMessage(errorRow, errorColumn, str, errorState);
+    }
 
     // Limpa a memória alocada para word
     free(word);

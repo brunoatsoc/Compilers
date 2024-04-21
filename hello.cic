@@ -1,6 +1,5 @@
 rotina
-    imprima("Digite um n
-    mero")
+    imprima("Digite um nmero")
     leia(nUmErO)
     nUm <== nUm <123>
     imprima(123.0e10)
