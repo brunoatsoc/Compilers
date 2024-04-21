@@ -104,49 +104,49 @@ int lexical_analyzer(char str[], int size, char*** TK, int** row, int** column, 
         current = acept_tk(current, str[i], word); // Retorna o estado em que o eutomato está
 
         if(current == INITIAL_ERROR){
-            /*printf("%s -> Rejected1!!!\n", word); // Imprime a palavra que teve um erro
+            printf("%s -> Rejected1!!!\n", word); // Imprime a palavra que teve um erro
 			word[0] = '\0'; // Limpa a variavel que guarda a palavra que teve o erro
 			current = Q0; // Retorna pqra o estado Q0 para poder ler outra palavra
             allocMemoryError(&errorRow, &errorColumn, &errorState, c);
             errorRow[c] = j;
             errorColumn[c] = k;
             errorState[c] = INITIAL_ERROR;
-            i = i - 1;
-            c++;*/
-            asignValuesError(word, &errorRow, &errorColumn, &errorState, &current, &c, &i, j, k, INITIAL_ERROR);
+            //i = i - 1;
+            c++;
+            //asignValuesError(word, &errorRow, &errorColumn, &errorState, &current, &c, &i, j, k, INITIAL_ERROR);
         }else if(current == QUOTATION_ERROR){
-            /*printf("%s -> Rejected!!!2\n", word); // Imprime a palavra que teve um erro
+            printf("%s -> Rejected!!!2\n", word); // Imprime a palavra que teve um erro
 			word[0] = '\0'; // Limpa a variavel que guarda a palavra que teve o erro
 			current = Q0; // Retorna pqra o estado Q0 para poder ler outra palavra
             allocMemoryError(&errorRow, &errorColumn, &errorState, c);
             errorRow[c] = j;
             errorColumn[c] = k;
             errorState[c] = QUOTATION_ERROR;
-            i = i - 1;
-            c++;*/
-            asignValuesError(word, &errorRow, &errorColumn, &errorState, &current, &c, &i, j, k, QUOTATION_ERROR);
+            //i = i - 1;
+            c++;
+            //asignValuesError(word, &errorRow, &errorColumn, &errorState, &current, &c, &i, j, k, QUOTATION_ERROR);
         }else if(current == ID_ERROR){
-            /*printf("%s -> Rejected!!!3\n", word); // Imprime a palavra que teve um erro
+            printf("%s -> Rejected!!!3\n", word); // Imprime a palavra que teve um erro
 			word[0] = '\0'; // Limpa a variavel que guarda a palavra que teve o erro
 			current = Q0; // Retorna pqra o estado Q0 para poder ler outra palavra
             allocMemoryError(&errorRow, &errorColumn, &errorState, c);
             errorRow[c] = j;
             errorColumn[c] = k;
             errorState[c] = ID_ERROR;
-            i = i - 1;
-            c++;*/
-            asignValuesError(word, &errorRow, &errorColumn, &errorState, &current, &c, &i, j, k, ID_ERROR);
+            //i = i - 1;
+            c++;
+            //asignValuesError(word, &errorRow, &errorColumn, &errorState, &current, &c, &i, j, k, ID_ERROR);
         }else if(current == KEYWORD_ERROR){
-            /*printf("%s -> Rejected!!!4\n", word); // Imprime a palavra que teve um erro
+            printf("%s -> Rejected!!!4\n", word); // Imprime a palavra que teve um erro
 			word[0] = '\0'; // Limpa a variavel que guarda a palavra que teve o erro
 			current = Q0; // Retorna pqra o estado Q0 para poder ler outra palavra
             allocMemoryError(&errorRow, &errorColumn, &errorState, c);
             errorRow[c] = j;
             errorColumn[c] = k;
             errorState[c] = KEYWORD_ERROR;
-            i = i - 1;
-            c++;*/
-            asignValuesError(word, &errorRow, &errorColumn, &errorState, &current, &c, &i, j, k, KEYWORD_ERROR);
+            //i = i - 1;
+            c++;
+            //asignValuesError(word, &errorRow, &errorColumn, &errorState, &current, &c, &i, j, k, KEYWORD_ERROR);
         }
 
         // Retorna uma menssagem de erro se cair em um estado que o eutomato não reconhece
@@ -155,12 +155,12 @@ int lexical_analyzer(char str[], int size, char*** TK, int** row, int** column, 
 			word[0] = '\0'; // Limpa a variavel que guarda a palavra que teve o erro
 			current = Q0; // Retorna pqra o estado Q0 para poder ler outra palavra
             i = i - 1;
+            k = k - 1;
             allocMemoryError(&errorRow, &errorColumn, &errorState, c);
             errorRow[c] = j;
             errorColumn[c] = k;
             errorState[c] = -1;
             c++;
-            k = k - 1;
         }
 
         // Imprime o token que foi reconhecido ou retorna o erro
