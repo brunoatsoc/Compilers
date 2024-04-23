@@ -8,9 +8,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Enumeração dos estados do automato
+// Enumeração dos estados do automato com alguns enums adicionais para auxiliar nos retornos do código
 enum STATE{
-    Q0, Q1, Q2, Q3, Q4, TK_INT, Q14, Q5, Q6, Q7, Q10, Q9, TK_FLOAT, Q32, Q33, Q34, TK_ID, Q71, TK_IDENTIFIER, Q16, Q17, Q18, Q19, Q20, Q21, Q22, Q23, Q24, Q25, Q26, Q27, TK_DATA, Q28, Q29, Q30, TK_END, Q50, Q51, COMMENTLINE, Q12, Q13, Q15, TK_CADEIA, Q37, Q44, Q45, Q46, Q47, Q48, Q49, COMMENTMULTLINES, Q40, Q43, TK_GREATERTHAN, TK_GREATEREQUAL, TK_LESSTHAN, Q39, TK_LESSEQUAL, Q42, TK_ASSIGNMENT, Q38, TK_NOTEQUAL, Q41, Q67, TK_EQUAL, Q54, TK_OPENPAR, Q53, TK_TOWDOTS, Q55, TK_CLOSEPAR, Q70, TK_OR, Q69, TK_AND, Q36, TK_ADD, Q56, TK_SUB, Q57, TK_MULT, Q58, TK_DIV, Q59, TK_MOD, Q60, TK_NOT, INITIAL_ERROR, QUOTATION_ERROR, KEYWORD_ERROR, ID_ERROR
+    Q0, Q1, Q2, Q3, Q4, TK_INT, Q14, Q5, Q6, Q7, Q10, Q9, TK_FLOAT, Q32, Q33, Q34, TK_ID, Q71, TK_IDENTIFIER, Q16, Q17, Q18, Q19, Q20, Q21, Q22, Q23, Q24, Q25, Q26, Q27, TK_DATA, Q28, Q29, Q30, TK_END, Q50, Q51, COMMENTLINE, Q12, Q13, Q15, TK_CADEIA, Q37, Q44, Q45, Q46, Q47, Q48, Q49, COMMENTMULTLINES, Q40, Q43, TK_GREATERTHAN, TK_GREATEREQUAL, TK_LESSTHAN, Q39, TK_LESSEQUAL, Q42, TK_ASSIGNMENT, Q38, TK_NOTEQUAL, Q41, Q67, TK_EQUAL, Q54, TK_OPENPAR, Q53, TK_TOWDOTS, Q55, TK_CLOSEPAR, Q70, TK_OR, Q69, TK_AND, Q36, TK_ADD, Q56, TK_SUB, Q57, TK_MULT, Q58, TK_DIV, Q59, TK_MOD, Q60, TK_NOT, INITIAL_ERROR, QUOTATION_ERROR, KEYWORD_ERROR, ID_ERROR, DATAT_ERROR
 };
 
 // Declaração das funções
@@ -57,18 +57,21 @@ int main(void){
     // Fecha o arquivo
     fclose(file);
 
-    // Chama a funão que fara a leitura de cada carctere do array
-    char** TK = NULL;
-    int* row = NULL;
-    int* column = NULL;
-    char** lexem = NULL;
-    int count = 0;
-    int qtd[27];
-    
-    initializeWithZero(qtd, 27);
+    // Variaveis para guardar informações do codigo fonte que será testado
+    char** TK = NULL; // TOKEM
+    int* row = NULL; // Linha
+    int* column = NULL; // Coluna
+    char** lexem = NULL; // Lexema
+    int count = 0; // Contador
+    int qtd[25]; // Vetor para guardar a quantidade de cada token no código
 
+    // Inicializa o vetor de quantidade de tokens da linguagem
+    initializeWithZero(qtd, 25);
+
+    // Chama a função que faz a analize lexica da linguagem
     lexical_analyzer(contentfile, size, &TK, &row, &column, &lexem, &count, qtd);
 
+    // Imprime as tabelas com os tokens usados no codigo e a quantidade de vezes que cada um foi usado
     printTable(TK, row, column, lexem, count, qtd);
 
     // Limpa a memória alocada para contentfile
@@ -94,80 +97,43 @@ int lexical_analyzer(char str[], int size, char*** TK, int** row, int** column, 
 
     int j = 0, k = 0; // j é uma linha e k uma coluna
 
-    int* errorRow = NULL;
-    int* errorColumn = NULL;
-    enum STATE* errorState = NULL;
-    int c = 0;
+    // Variaveis que vão guardar iformações sobre os possiveis erros do código
+    int* errorRow = NULL; // Linhas
+    int* errorColumn = NULL; // Colunas
+    enum STATE* errorState = NULL; // Estado do erro
+    int c = 0; // Contador para os indices dos erros
 
     // Laço para iterar nas posições do array
     while(i <= size){
         current = acept_tk(current, str[i], word); // Retorna o estado em que o eutomato está
 
+        // Guardam o erro que foi cometido
+        // Aqui vai ser guardado a linha, coluna e tipo de erro para no final da leitura do código retornar as menssagens de erro
         if(current == INITIAL_ERROR){
-            printf("%s -> Rejected1!!!\n", word); // Imprime a palavra que teve um erro
-			word[0] = '\0'; // Limpa a variavel que guarda a palavra que teve o erro
-			current = Q0; // Retorna pqra o estado Q0 para poder ler outra palavra
-            allocMemoryError(&errorRow, &errorColumn, &errorState, c);
-            errorRow[c] = j;
-            errorColumn[c] = k;
-            errorState[c] = INITIAL_ERROR;
-            //i = i - 1;
-            c++;
-            //asignValuesError(word, &errorRow, &errorColumn, &errorState, &current, &c, &i, j, k, INITIAL_ERROR);
+            asignValuesError(word, &errorRow, &errorColumn, &errorState, &current, &c, &i, j, k, INITIAL_ERROR);
+            i++;
         }else if(current == QUOTATION_ERROR){
-            printf("%s -> Rejected!!!2\n", word); // Imprime a palavra que teve um erro
-			word[0] = '\0'; // Limpa a variavel que guarda a palavra que teve o erro
-			current = Q0; // Retorna pqra o estado Q0 para poder ler outra palavra
-            allocMemoryError(&errorRow, &errorColumn, &errorState, c);
-            errorRow[c] = j;
-            errorColumn[c] = k;
-            errorState[c] = QUOTATION_ERROR;
-            //i = i - 1;
-            c++;
-            //asignValuesError(word, &errorRow, &errorColumn, &errorState, &current, &c, &i, j, k, QUOTATION_ERROR);
+            asignValuesError(word, &errorRow, &errorColumn, &errorState, &current, &c, &i, j, k, QUOTATION_ERROR);
         }else if(current == ID_ERROR){
-            printf("%s -> Rejected!!!3\n", word); // Imprime a palavra que teve um erro
-			word[0] = '\0'; // Limpa a variavel que guarda a palavra que teve o erro
-			current = Q0; // Retorna pqra o estado Q0 para poder ler outra palavra
-            allocMemoryError(&errorRow, &errorColumn, &errorState, c);
-            errorRow[c] = j;
-            errorColumn[c] = k;
-            errorState[c] = ID_ERROR;
-            //i = i - 1;
-            c++;
-            //asignValuesError(word, &errorRow, &errorColumn, &errorState, &current, &c, &i, j, k, ID_ERROR);
-        }else if(current == KEYWORD_ERROR){
-            printf("%s -> Rejected!!!4\n", word); // Imprime a palavra que teve um erro
-			word[0] = '\0'; // Limpa a variavel que guarda a palavra que teve o erro
-			current = Q0; // Retorna pqra o estado Q0 para poder ler outra palavra
-            allocMemoryError(&errorRow, &errorColumn, &errorState, c);
-            errorRow[c] = j;
-            errorColumn[c] = k;
-            errorState[c] = KEYWORD_ERROR;
-            //i = i - 1;
-            c++;
-            //asignValuesError(word, &errorRow, &errorColumn, &errorState, &current, &c, &i, j, k, KEYWORD_ERROR);
-        }
-
-        // Retorna uma menssagem de erro se cair em um estado que o eutomato não reconhece
-        if(current == -1){
-            printf("%s -> Rejected!!!5\n", word); // Imprime a palavra que teve um erro
-			word[0] = '\0'; // Limpa a variavel que guarda a palavra que teve o erro
-			current = Q0; // Retorna pqra o estado Q0 para poder ler outra palavra
-            i = i - 1;
+            asignValuesError(word, &errorRow, &errorColumn, &errorState, &current, &c, &i, j, k, ID_ERROR);
             k = k - 1;
-            allocMemoryError(&errorRow, &errorColumn, &errorState, c);
-            errorRow[c] = j;
-            errorColumn[c] = k;
-            errorState[c] = -1;
-            c++;
+        }else if(current == KEYWORD_ERROR){
+            asignValuesError(word, &errorRow, &errorColumn, &errorState, &current, &c, &i, j, k, KEYWORD_ERROR);
+            k = k - 1;
+        }else if(current == DATAT_ERROR){
+            asignValuesError(word, &errorRow, &errorColumn, &errorState, &current, &c, &i, j, k, DATAT_ERROR);
+            k = k - 1;
+        }else if(current == -1){
+            asignValuesError(word, &errorRow, &errorColumn, &errorState, &current, &c, &i, j, k, -1);
+            k = k - 1;
         }
 
-        // Imprime o token que foi reconhecido ou retorna o erro
+        // Guarda as informações corretas do código para no final retornar as duas tabelas
+        // com linha, coluna, token e lexema de cada palavra reconhecida pelo analizador
         if(current == TK_INT){
-            allocMemory(TK, row, column, lexem, *count);
-            asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_INT");
-            qtd[0] += 1;
+            allocMemory(TK, row, column, lexem, *count); // Aloca memória para os vetores onde estarão as informações
+            asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_INT"); // Faz a atribuição dos valores
+            qtd[0] += 1; // Incrementa o vetor com as quantidades de cada token
         }else if(current == TK_FLOAT){
             allocMemory(TK, row, column, lexem, *count);
             asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_FLOAT");
@@ -178,6 +144,7 @@ int lexical_analyzer(char str[], int size, char*** TK, int** row, int** column, 
             qtd[2] += 1;
         }else if(current == TK_IDENTIFIER){
             allocMemory(TK, row, column, lexem, *count);
+            word[0] = '\0';
             asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_IDENTIFIER");
             qtd[3] += 1;
         }else if(current == TK_DATA){
@@ -188,102 +155,124 @@ int lexical_analyzer(char str[], int size, char*** TK, int** row, int** column, 
             allocMemory(TK, row, column, lexem, *count);
             asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_END");
             qtd[5] += 1;
-        }else if(current == COMMENTLINE){
-            allocMemory(TK, row, column, lexem, *count);
-            asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "COMMENTLINE");
-            qtd[6] += 1;
         }else if(current == TK_CADEIA){
             allocMemory(TK, row, column, lexem, *count);
             asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_CADEIA");
-            qtd[7] += 1;
-        }else if(current == COMMENTMULTLINES){
-            allocMemory(TK, row, column, lexem, *count);
-            asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "COMMENTMULTLINES");
-            qtd[8] += 1;
+            qtd[6] += 1;
         }else if(current == TK_GREATERTHAN){
             allocMemory(TK, row, column, lexem, *count);
+            word[0] = '\0';
             asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_GREATERTHAN");
-            qtd[9] += 1;
+            qtd[7] += 1;
         }else if(current == TK_GREATEREQUAL){
             allocMemory(TK, row, column, lexem, *count);
+            word[0] = '\0';
             asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_GREATEREQUAL");
-            qtd[10] += 1;
+            qtd[8] += 1;
         }else if(current == TK_LESSTHAN){
             allocMemory(TK, row, column, lexem, *count);
+            word[0] = '\0';
             asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_LESSTHAN");
-            qtd[11] += 1;
+            qtd[9] += 1;
         }else if(current == TK_LESSEQUAL){
             allocMemory(TK, row, column, lexem, *count);
+            word[0] = '\0';
             asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_LESSEQUAL");
-            qtd[12] += 1;
+            qtd[10] += 1;
         }else if(current == TK_ASSIGNMENT){
             allocMemory(TK, row, column, lexem, *count);
+            word[0] = '\0';
             asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_ASSIGNMENT");
-            qtd[13] += 1;
+            qtd[11] += 1;
         }else if(current == TK_NOTEQUAL){
             allocMemory(TK, row, column, lexem, *count);
+            word[0] = '\0';
             asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_NOTEQUAL");
-            qtd[14] += 1;
+            qtd[12] += 1;
         }else if(current == TK_EQUAL){
             allocMemory(TK, row, column, lexem, *count);
+            word[0] = '\0';
             asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_EQUAL");
-            qtd[15] += 1;
+            qtd[13] += 1;
         }else if(current == TK_OPENPAR){
             allocMemory(TK, row, column, lexem, *count);
+            word[0] = '\0';
             asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_OPENPAR");
-            qtd[16] += 1;
+            qtd[14] += 1;
         }else if(current == TK_CLOSEPAR){
             allocMemory(TK, row, column, lexem, *count);
+            word[0] = '\0';
             asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_CLOSEPAR");
-            qtd[17] += 1;
+            qtd[15] += 1;
         }else if(current == TK_TOWDOTS){
             allocMemory(TK, row, column, lexem, *count);
+            word[0] = '\0';
             asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_TOWDOTS");
-            qtd[18] += 1;
+            qtd[16] += 1;
         }else if(current == TK_OR){
             allocMemory(TK, row, column, lexem, *count);
+            word[0] = '\0';
             asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_OR");
-            qtd[19] += 1;
+            qtd[17] += 1;
         }else if(current == TK_AND){
             allocMemory(TK, row, column, lexem, *count);
+            word[0] = '\0';
             asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_AND");
-            qtd[20] += 1;
+            qtd[18] += 1;
         }else if(current == TK_ADD){
             allocMemory(TK, row, column, lexem, *count);
+            word[0] = '\0';
             asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_ADD");
-            qtd[21] += 1;
+            qtd[19] += 1;
         }else if(current == TK_SUB){
             allocMemory(TK, row, column, lexem, *count);
+            word[0] = '\0';
             asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_SUB");
-            qtd[22] += 1;
+            qtd[20] += 1;
         }else if(current == TK_MULT){
             allocMemory(TK, row, column, lexem, *count);
+            word[0] = '\0';
             asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_MULT");
-            qtd[23] += 1;
+            qtd[21] += 1;
         }else if(current == TK_DIV){
             allocMemory(TK, row, column, lexem, *count);
+            word[0] = '\0';
             asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_DIV");
-            qtd[24] += 1;
+            qtd[22] += 1;
         }else if(current == TK_MOD){
             allocMemory(TK, row, column, lexem, *count);
+            word[0] = '\0';
             asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_MOD");
-            qtd[25] += 1;
+            qtd[23] += 1;
         }else if(current == TK_NOT){
             allocMemory(TK, row, column, lexem, *count);
+            word[0] = '\0';
             asignValues(j, &k, count, *TK, *row, *column, *lexem, word, &current, &i, "TK_NOT");
-            qtd[26] += 1;
+            qtd[24] += 1;
+        }else if(current == COMMENTLINE){
+            current = Q0;
+            i = i - 1;
+            k = k - 1;
+            word[0] = '\0';
+        }else if(current == COMMENTMULTLINES){
+            current = Q0;
+            i = i - 1;
+            k = k - 1;
+            word[0] = '\0';
         }
 
-        k++;
+        k++; // Colina em que o codigo está
 
+        // Caso o ponteiro esteja lendo um caractere de proxima linha, ele zera a coluna e incrementa a linha
         if(str[i] == '\n'){
-            k = 0;
-            j++;
+            k = 0; // Coluna
+            j++; // Linha
         }
 
 		i++; // Incrementa aposição do vetor
     }
 
+    // Se a quantidade de erros no código for maior que zero as menssagens serão mostradas sinalizando os erros
     if(c > 0){
         errorMessage(errorRow, errorColumn, str, errorState);
     }
@@ -292,7 +281,7 @@ int lexical_analyzer(char str[], int size, char*** TK, int** row, int** column, 
     free(word);
 
     return 0; // Retorna quando percorre todos os caracteres do arquivo
-}
+}// Fim lexical_analyzer
 
 // Função que simula o funcionamento do automato
 // A função retorna o estado atual do automato
@@ -391,7 +380,7 @@ enum STATE acept_tk(enum STATE current, char character, char* word){
             }else if(!(character >= '0' && character <= '9')){
                 return TK_INT;
             }
-            break;
+            return DATAT_ERROR;
         case Q2:
             if(character >= '0' && character <= '9'){
                 strcat(word, c);
@@ -455,19 +444,19 @@ enum STATE acept_tk(enum STATE current, char character, char* word){
                 strcat(word, c);
                 return Q9;
             }
-            break;
+            return DATAT_ERROR;
         case Q10:
             if(character >= '0' && character <= '9'){
                 strcat(word, c);
                 return Q9;
             }
-            break;
+            return DATAT_ERROR;
         case Q14:
             if(character >= '0' && character <= '9'){
                 strcat(word, c);
                 return Q6;
             }
-            break;
+            return DATAT_ERROR;
         case Q9:
             if(character >= '0' && character <= '9'){
                 strcat(word, c);
@@ -475,7 +464,7 @@ enum STATE acept_tk(enum STATE current, char character, char* word){
             }else if(!(character >= '0' && character <= '9')){
                 return TK_FLOAT;
             }
-            break;
+            return DATAT_ERROR;
         case Q32:
             if(character >= 'A' && character <= 'Z'){
                 strcat(word, c);
@@ -484,7 +473,7 @@ enum STATE acept_tk(enum STATE current, char character, char* word){
                 strcat(word, c);
                 return Q71;
             }
-            break;
+            return ID_ERROR;
         case Q33:
             if(character >= 'a' && character <= 'z'){
                 strcat(word, c);
@@ -517,43 +506,43 @@ enum STATE acept_tk(enum STATE current, char character, char* word){
                 strcat(word, c);
                 return Q17;
             }
-            break;
+            return DATAT_ERROR;
         case Q17:
             if(character >= '0' && character <= '9'){
                 strcat(word, c);
                 return Q18;
             }
-            break;
+            return DATAT_ERROR;
         case Q18:
             if(character == '_'){
                 strcat(word, c);
                 return Q19;
             }
-            break;
+            return DATAT_ERROR;
         case Q19:
             if(character >= '0' && character <= '9'){
                 strcat(word, c);
                 return Q20;
             }
-            break;
+            return DATAT_ERROR;
         case Q20:
             if(character >= '0' && character <= '9'){
                 strcat(word, c);
                 return Q21;
             }
-            break;
+            return DATAT_ERROR;
         case Q21:
             if(character >= '0' && character <= '9'){
                 strcat(word, c);
                 return Q22;
             }
-            break;
+            return DATAT_ERROR;
         case Q22:
             if(character >= '0' && character <= '9'){
                 strcat(word, c);
                 return Q23;
             }
-            break;
+            return DATAT_ERROR;
         case Q23:
             return TK_DATA;
         case Q24:
@@ -561,37 +550,37 @@ enum STATE acept_tk(enum STATE current, char character, char* word){
                 strcat(word, c);
                 return Q25;
             }
-            break;
+            return DATAT_ERROR;
         case Q25:
             if(character >= '0' && character <= '9'){
                 strcat(word, c);
                 return Q26;
             }
-            break;
+            return DATAT_ERROR;
         case Q26:
             if(character == '/'){
                 strcat(word, c);
                 return Q27;
             }
-            break;
+            return DATAT_ERROR;
         case Q27:
             if(character >= '0' && character <= '9'){
                 strcat(word, c);
                 return Q20;
             }
-            break;
+            return DATAT_ERROR;
         case Q28:
             if(character == 'X'){
                 strcat(word, c);
                 return Q29;
             }
-            break;
+            return DATAT_ERROR;
         case Q29:
             if((character >= '0' && character <= '9') || (character >= 'A' && character <= 'F')){
                 strcat(word, c);
                 return Q30;
             }
-            break;
+            return DATAT_ERROR;
         case Q30:
             if((character >= '0' && character <= '9') || (character >= 'A' && character <= 'F')){
                 strcat(word, c);
@@ -735,10 +724,9 @@ enum STATE acept_tk(enum STATE current, char character, char* word){
             return -1;
     }
 
-    //strcat(word, c);
     // Retorno do erro
     return -1;
-}
+}// Fim acept_tk
 
 // Função para verificar se o TK_IDENTIFIER que foi reconhecido faz parte das palavras reservadas da linguagem
 int haveKeyWord(char* word){
@@ -753,8 +741,9 @@ int haveKeyWord(char* word){
         }
     }
     return 0; // Retorna zero se a palavra não faz parte da linguagem
-}
+}// Fim haveKeyWord
 
+// Aloca memória para as variaveis que vão guardar informações validas do código, o retorno é feito pelos ponteiros
 int allocMemory(char*** TK, int** row, int** column, char*** lexem, int count){
     *TK = (char**)realloc(*TK, (count + 1) * sizeof(char*));
     *row = (int*)realloc(*row, (count + 1) * sizeof(int));
@@ -766,8 +755,9 @@ int allocMemory(char*** TK, int** row, int** column, char*** lexem, int count){
 
         return -1;
     }
-}
+}// Fim allocMemory
 
+// Aloca memória para os dados incorretos do código, o retorno é feito pelos ponteiros
 int allocMemoryError(int** r, int** c, enum STATE** s, int count){
     *r = (int*)realloc(*r, (count + 1) * sizeof(int));
     *c = (int*)realloc(*c, (count + 1) * sizeof(int));
@@ -778,10 +768,10 @@ int allocMemoryError(int** r, int** c, enum STATE** s, int count){
 
         return -1;
     }
-}
+}// Fim allocMemoryError
 
+// Atribui os valores para os dados corretos do código, o retorno das atribuições e feita pelos ponteiros
 void asignValues(int j, int* k, int* count, char** TK, int* row, int* column, char** lexem, char* word, enum STATE* current, int* i, char* tk_x){
-    printf("%s -> %s\n", word, tk_x);
     row[*(count)] = j;
     column[*(count)] = (*k) - 1;
     TK[*(count)] = tk_x;
@@ -789,35 +779,35 @@ void asignValues(int j, int* k, int* count, char** TK, int* row, int* column, ch
     word[0] = '\0';
     (*current) = Q0;
     (*i) = (*i) - 1;
-    printf("count = %d, linha = %d, coluna = %d, TK = %s, lexem = %s\n", *(count), row[*(count)], column[*(count)], TK[*(count)], lexem[*(count)]);
     (*count)++;
     *(k) = (*k) - 1;
-}
+}// Fim asignValues
 
+// Atribui palores para guardar as informações errados do código
 void asignValuesError(char* word, int** errorRow, int** errorColumn, enum STATE** errorState, enum STATE* current, int* c, int* i, int j, int k, enum STATE errorT){
-    printf("%s -> Rejected!!!\n", word); // Imprime a palavra que teve um erro
     word[0] = '\0'; // Limpa a variavel que guarda a palavra que teve o erro
-    current = Q0; // Retorna pqra o estado Q0 para poder ler outra palavra
+    *current = Q0; // Retorna pqra o estado Q0 para poder ler outra palavra
     allocMemoryError(errorRow, errorColumn, errorState, *c);
     (*errorRow)[*c] = j;
     (*errorColumn)[*c] = k;
     (*errorState)[*c] = errorT;
     (*i) = (*i) - 1;
     (*c)++;
-}
+}// Fim asignValuesError
 
+// Iprime a tabela de tokens com a linha, coluna, tipo de token e seu lexema
+// Também imprime a tabela com a quantidade de vezes que cada token foi usado
 void printTable(char** TK, int* row, int* column, char** lexem, int count, int qtd[]){
     int i;
-    int size = 27;
-
-    char* TOKEN[] = {"TK_INT", "TK_FLOAT", "TK_ID", "TK_IDENTIFIER", "TK_DATA", "TK_END", "COMMENTLINE", "TK_CADEIA", "COMMENTMULTLINES", "TK_GREATERTHAN", "TK_GREATEREQUAL", "TK_LESSTHAN", "TK_LESSEQUAL", "TK_ASSIGNMENT", "TK_NOTEQUAL", "TK_EQUAL", "TK_OPENPAR", "TK_CLOSEPAR", "TK_TOWDOTS", "TK_OR", "TK_AND", "TK_ADD", "TK_SUB", "TK_MULT", "TK_DIV", "TK_MOD", "TK_NOT"};
+    char* TOKEN[] = {"TK_INT", "TK_FLOAT", "TK_ID", "TK_IDENTIFIER", "TK_DATA", "TK_END", "TK_CADEIA", "TK_GREATERTHAN", "TK_GREATEREQUAL", "TK_LESSTHAN", "TK_LESSEQUAL", "TK_ASSIGNMENT", "TK_NOTEQUAL", "TK_EQUAL", "TK_OPENPAR", "TK_CLOSEPAR", "TK_TOWDOTS", "TK_OR", "TK_AND", "TK_ADD", "TK_SUB", "TK_MULT", "TK_DIV", "TK_MOD", "TK_NOT"};
+    int size = 25;
 
     printf("+-----+-----+----------------+--------------------+\n");
     printf("| LIN | COL | TOKEN          | LEXEMA             |\n");
     printf("+-----+-----+----------------+--------------------+\n");
 
     for(i = 0; i < count; i++){
-        printf("|%3d  |%3d  |%-15s |%-19s |\n", row[i], column[i], TK[i], lexem[i]);
+        printf("|%3d  |%3d  |%-15s |%-19s |\n", row[i] + 1, column[i] + 1, TK[i], lexem[i]);
         printf("+-----+-----+----------------+--------------------+\n");
     }
 
@@ -827,54 +817,74 @@ void printTable(char** TK, int* row, int* column, char** lexem, int count, int q
     printf("| TOKEN          | USOS |\n");
     printf("+----------------+------+\n");
 
-    for(i = 0; i < 27; i++){
+    for(i = 0; i < size; i++){
         if(qtd[i] != 0){
             printf("|%-15s | %3d  |\n", TOKEN[i], qtd[i]);
             printf("+----------------+------+\n");
         }
     }
-}
+}// Fim printTable
 
+// Inicializa um vetor de inteiros com zeros
 void initializeWithZero(int* var, int size){
     int i;
 
     for(i = 0; i < size; i++){
         var[i] = 0;
     }
-}
+}// Fim initializeWithZero
 
+// Imprime as menssagens de erro do código
 void errorMessage(int* row, int* column, char* program, enum STATE* error){
     int i = 0;
     int j = 0, k = 0, l = 0;
 
-    while(program[i] != '\0'){
-        if(program[i] == '\n'){
+    char* newProgram = calloc(strlen(program) + 2, sizeof(char));
+    strcat(newProgram, program);
+    strcat(newProgram, "\n");
+
+    printf("[%3d] ", j + 1);
+
+    while(newProgram[i] != '\0'){
+        printf("%c", newProgram[i]);
+
+        if(newProgram[i] == '\n'){
             k = 0;
             j++;
         }
 
-        printf("%c", program[i]);
+        if(newProgram[i] == '\n' && row[l] != j - 1 && strlen(newProgram) - 1 != i){
+            printf("\n[%3d] ", j + 1);
+        }
 
         if((row[l] + 1) == j){
             printf("\n");
             int count;
+
+            printf("      ");
             for(count = 0; count < column[l]; count++){
                 printf("-");
             }
+
             printf("^\n");
 
             if(error[l] == INITIAL_ERROR || error[l] == -1){
-                printf("Erro na Linha %d Coluna %d: Não reconhece TOKEN!!!\n", row[l], column[l]);
+                printf("      Erro na Linha %d Coluna %d: Não reconhece TOKEN!!!\n", row[l] + 1, column[l] + 1);
             }else if(error[l] == QUOTATION_ERROR){
-                printf("Erro na Linha %d Coluna %d: Cadeia sem fechamento!!!\n", row[l], column[l]);
+                printf("      Erro na Linha %d Coluna %d: Cadeia sem fechamento!!!\n", row[l] + 1, column[l] + 1);
             }else if(error[l] == ID_ERROR){
-                printf("Erro na Linha %d Coluna %d: Identificador não valido!!!\n", row[l], column[l]);
+                printf("      Erro na Linha %d Coluna %d: Identificador não valido!!!\n", row[l] + 1, column[l] + 1);
             }else if(error[l] == KEYWORD_ERROR){
-                printf("Erro na Linha %d Coluna %d: Palavra Reservada não encontrada!!!\n", row[l], column[l]);
+                printf("      Erro na Linha %d Coluna %d: Palavra Reservada não encontrada!!!\n", row[l] + 1, column[l] + 1);
+            }else if(error[l] == DATAT_ERROR){
+                printf("      Erro na Linha %d Coluna %d: Tipo de dado mal formatado!!!\n", row[l] + 1, column[l] + 1);
+            }
+            if((row[l + 1] + 1) != j){
+                printf("\n[%3d] ", j + 1);
             }
             l++;
         }
         i++;
     }
     printf("\n\n");
-}
+}// Fim errorMessage
