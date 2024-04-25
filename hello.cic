@@ -1,8 +1,9 @@
-# Ex-02-incorreto.cic
+<<< Ex-03-incorreto.cic 
 
 rotina
-   imprima("Digite um 
-   nro")
-   NuM <== 11/11/2000 + 11_11_20
-   imprima(AX23423)
+   leia(<a>)
+>>>
+   enquanto nUm <= .09e-123:
+      imprima(99/12_1999)
+   imprima("Fim prog"rama") 	
 fim_rotina

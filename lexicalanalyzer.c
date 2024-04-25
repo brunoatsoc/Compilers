@@ -421,6 +421,9 @@ enum STATE acept_tk(enum STATE current, char character, char* word){
             if(character >= '0' && character <= '9'){
                 strcat(word, c);
                 return Q6;
+            }else if(character == 'e'){
+                strcat(word, c);
+                return Q7;
             }else if(!(character >= '0' && character <= '9')){
                 return TK_FLOAT;
             }
@@ -570,7 +573,7 @@ enum STATE acept_tk(enum STATE current, char character, char* word){
             }
             return DATAT_ERROR;
         case Q28:
-            if(character == 'X'){
+            if(character == 'X' || character == 'x'){
                 strcat(word, c);
                 return Q29;
             }
@@ -601,7 +604,7 @@ enum STATE acept_tk(enum STATE current, char character, char* word){
             strcat(word, c);
             return Q51;
         case Q12:
-            if((character >= ' ' && character <= '~') && character != '"'){
+            if(((character >= ' ' && character <= '~') || character == 9) && character != '"'){
                 strcat(word, c);
                 return Q13;
             }else if(character == '"'){
@@ -611,7 +614,7 @@ enum STATE acept_tk(enum STATE current, char character, char* word){
 
             return QUOTATION_ERROR;
         case Q13:
-            if((character >= ' ' && character <= '~') && character != '"'){
+            if(((character >= ' ' && character <= '~') || character == 9) && character != '"'){
                 strcat(word, c);
                 return Q13;
             }else if(character == '"'){
@@ -643,7 +646,7 @@ enum STATE acept_tk(enum STATE current, char character, char* word){
             if(character == '>'){
                 strcat(word, c);
                 return Q47;
-            }else if(character != '<' && character != '\0'){
+            }else if(character != '\0'){
                 strcat(word, c);
                 return Q46;
             }
@@ -652,7 +655,7 @@ enum STATE acept_tk(enum STATE current, char character, char* word){
             if(character == '>'){
                 strcat(word, c);
                 return Q47;
-            }else if(character != '<' && character != '\0'){
+            }else if(character != '\0'){
                 strcat(word, c);
                 return Q46;
             }
@@ -661,8 +664,10 @@ enum STATE acept_tk(enum STATE current, char character, char* word){
             if(character == '>'){
                 strcat(word, c);
                 return Q48;
+            }else if(character != '\0'){
+                strcat(word, c);
+                return Q46;
             }
-            break;
         case Q48:
             if(character == '>'){
                 strcat(word, c);
@@ -846,22 +851,25 @@ void errorMessage(int* row, int* column, char* program, enum STATE* error){
     printf("[%3d] ", j + 1);
 
     while(newProgram[i] != '\0'){
-        printf("%c", newProgram[i]);
+        if((row[l] + 1) != j){
+            printf("%c", newProgram[i]);
+        }
 
         if(newProgram[i] == '\n'){
             k = 0;
             j++;
         }
 
-        if(newProgram[i] == '\n' && row[l] != j - 1 && strlen(newProgram) - 1 != i){
+        if(newProgram[i] == '\n' && row[l] != j - 1 && strlen(newProgram) - 1 != i && newProgram[i + 1] != '\0'){
             printf("\n[%3d] ", j + 1);
         }
 
         if((row[l] + 1) == j){
-            printf("\n");
             int count;
 
+            printf("\n");
             printf("      ");
+
             for(count = 0; count < column[l]; count++){
                 printf("-");
             }
@@ -879,11 +887,14 @@ void errorMessage(int* row, int* column, char* program, enum STATE* error){
             }else if(error[l] == DATAT_ERROR){
                 printf("      Erro na Linha %d Coluna %d: Tipo de dado mal formatado!!!\n", row[l] + 1, column[l] + 1);
             }
-            if((row[l + 1] + 1) != j){
+
+            if((row[l + 1] + 1) != j && newProgram[i + 1] != '\0'){
                 printf("\n[%3d] ", j + 1);
             }
+
             l++;
         }
+
         i++;
     }
     printf("\n\n");
